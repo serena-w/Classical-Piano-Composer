@@ -3,7 +3,7 @@
 import glob
 import pickle
 import numpy
-from music21 import converter, instrument, note, chord
+from music21 import converter, instrument, note, chord, tempo, key, meter
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
@@ -38,15 +38,34 @@ def get_notes():
 
         try: # file has instrument parts
             s2 = instrument.partitionByInstrument(midi)
-            notes_to_parse = s2.parts[0].recurse() 
+            notes_to_parse = s2.parts[0].recurse()
         except: # file has notes in a flat structure
             notes_to_parse = midi.flat.notes
 
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes.append(str(element.pitch))
+                notes.append("note:" + str(element.pitch) + "," +
+                    str(element.quarterLength) + "," + str(element.offset))
             elif isinstance(element, chord.Chord):
-                notes.append('.'.join(str(n) for n in element.normalOrder))
+                notes.append("chord:" +
+                  ('.'.join(str(n) for n in element.normalOrder)) + ","
+                    + str(element.quarterLength) + "," + str(element.offset))
+            elif isinstance(element, tempo.MetronomeMark):
+                notes.append("metro:" + str(element.number) + "," +
+                    str(element.offset))
+            elif isinstance(element, note.Rest):
+                notes.append("rest:" +
+                    str(element.quarterLength) + "," + str(element.offset))
+            elif isinstance(element, instrument.Piano):
+                notes.append("piano")
+            elif isinstance(element, key.Key):
+                notes.append("key:" + element.tonicPitchNameWithCase)
+            elif isinstance(element, meter.TimeSignature):
+                notes.append("time:" + element.ratioString)
+            else:
+              print("not accounted for",element,element.duration)
+
+        notes.append('END')
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
