@@ -2,7 +2,7 @@
     trained neural network """
 import pickle
 import numpy
-from music21 import instrument, note, chord, tempo, key, meter
+from music21 import instrument, note, chord, tempo, key, meter, stream
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
@@ -64,6 +64,7 @@ def create_network(network_input, n_vocab):
     model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
+    # model.summary()
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     # Load the weights to each node

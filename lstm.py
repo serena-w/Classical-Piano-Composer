@@ -119,6 +119,7 @@ def create_network(network_input, n_vocab):
     model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
+    # model.summary()
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     return model
