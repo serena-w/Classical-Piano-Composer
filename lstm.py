@@ -44,9 +44,12 @@ def get_notes():
 
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes.append(str(element.pitch))
+                notes.append(str(element.pitch.midi))
             elif isinstance(element, chord.Chord):
                 notes.append('.'.join(str(n) for n in element.normalOrder))
+
+        # remove this to train on full dataset
+        break
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
@@ -56,30 +59,39 @@ def get_notes():
 def prepare_sequences(notes, n_vocab):
     """ Prepare the sequences used by the Neural Network """
     sequence_length = 100
+    noteRange = 128
 
-    # get all pitch names
-    pitchnames = sorted(set(item for item in notes))
+    # notes is a list of note and chord's represented by midi value
+    pitchnames = sorted(set(notes))
 
-     # create a dictionary to map pitches to integers
-    note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
-
-    network_input = []
-    network_output = []
+    network_input = numpy.zeros((len(notes)-sequence_length, noteRange, sequence_length))
+    network_output = numpy.zeros((len(notes)-sequence_length, noteRange, 1))
 
     # create input sequences and the corresponding outputs
-    for i in range(0, len(notes) - sequence_length, 1):
+    for i in range(0, len(notes) - sequence_length):
         sequence_in = notes[i:i + sequence_length]
         sequence_out = notes[i + sequence_length]
-        network_input.append([note_to_int[char] for char in sequence_in])
-        network_output.append(note_to_int[sequence_out])
 
-    n_patterns = len(network_input)
+        # build network input using n-hot vectors
+        for j in range(0,len(sequence_in)):
+            elem = sequence_in[j]
+            if elem.find('.') != -1:
+                for n in elem.split('.'):
+                    network_input[i][int(n)][j] = 1
+            else:
+                network_input[i][int(elem)][j] = 1 
+
+        # build network output using a single n-hot vector
+        if sequence_out.find('.') != -1:
+            for n in sequence_out.split('.'):
+                network_output[i][int(n)][0] = 1
+        else:
+            network_output[i][int(sequence_out)][0] = 1 
 
     # reshape the input into a format compatible with LSTM layers
-    network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
-    # normalize input
-    network_input = network_input / float(n_vocab)
+    print(network_input.shape)
 
+    print(network_input[0][0:noteRange][0:sequence_length])
     network_output = np_utils.to_categorical(network_output)
 
     return (network_input, network_output)
