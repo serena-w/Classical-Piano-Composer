@@ -21,8 +21,9 @@ def generate():
     # Get all pitch names
     n_vocab = len(set(notes))
 
-    network_input, normalized_input = lstm.prepare_sequences(notes, pitchnames, n_vocab)
-    model = lstm.create_network(normalized_input, n_vocab)
+    network_input, _ = lstm.prepare_sequences(notes, n_vocab)
+    model = lstm.create_network(network_input, n_vocab)
+    model.load_weights('weights-improvement-01-0.0526-bigger.hdf5')
     prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
     create_midi(prediction_output)
 
@@ -37,18 +38,17 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
     prediction_output = []
 
     # generate 500 notes
-    for note_index in range(500):
+    for note_index in range(100):
         prediction_input = numpy.reshape(pattern, (1, 128, 100))
         prediction = model.predict(prediction_input, verbose=0)
-
         notes = []
         for note in range(0, len(prediction)):
-            if prediction[note] > 0.5:
+            if prediction[0][note] > 0.5:
                 notes.append(note)
         prediction_output.append(notes)
 
-        np.append(pattern, prediction.reshape(-1,1), 1)
-        pattern = pattern[1:len(pattern)]
+        pattern = numpy.append(pattern, prediction.reshape(-1,1), 1)
+        pattern = pattern[:,1:]
 
     return prediction_output
 
@@ -79,7 +79,7 @@ def create_midi(prediction_output):
             new_note.storedInstrument = instrument.Piano()
             output_notes.append(new_note)
         else:
-            print("oh no")
+            print("no valid notes")
 
         # increase offset each iteration so that notes do not stack
         offset += 0.5
