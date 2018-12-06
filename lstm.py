@@ -43,10 +43,7 @@ def get_notes():
             if isinstance(element, note.Note):
                 notes.append(str(element.pitch.midi))
             elif isinstance(element, chord.Chord):
-                notes.append('.'.join(str(n) for n in element.normalOrder))
-
-        # remove this to train on full dataset
-        break
+                notes.append('.'.join(str(p.midi) for p in element.pitches))
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
@@ -89,7 +86,6 @@ def prepare_sequences(notes, n_vocab):
 
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
-
     inputs = Input(shape=(network_input.shape[1], network_input.shape[2]))
     lstm1 = LSTM(
         512,
