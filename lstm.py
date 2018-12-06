@@ -35,7 +35,7 @@ def get_notes():
 
         try: # file has instrument parts
             s2 = instrument.partitionByInstrument(midi)
-            notes_to_parse = s2.parts[0].recurse() 
+            notes_to_parse = s2.parts[0].recurse()
         except: # file has notes in a flat structure
             notes_to_parse = midi.flat.notes
 
@@ -44,9 +44,6 @@ def get_notes():
                 notes.append(str(element.pitch.midi))
             elif isinstance(element, chord.Chord):
                 notes.append('.'.join(str(n) for n in element.normalOrder))
-
-        # remove this to train on full dataset
-        break
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
@@ -76,14 +73,14 @@ def prepare_sequences(notes, n_vocab):
                 for n in elem.split('.'):
                     network_input[i][int(n)][j] = 1
             else:
-                network_input[i][int(elem)][j] = 1 
+                network_input[i][int(elem)][j] = 1
 
         # build network output using a single n-hot vector
         if sequence_out.find('.') != -1:
             for n in sequence_out.split('.'):
                 network_output[i][int(n)] = 1
         else:
-            network_output[i][int(sequence_out)] = 1 
+            network_output[i][int(sequence_out)] = 1
 
     return (network_input, network_output)
 
