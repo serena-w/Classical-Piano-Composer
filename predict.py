@@ -23,7 +23,7 @@ def generate():
 
     network_input, _ = lstm.prepare_sequences(notes, n_vocab)
     model = lstm.create_network(network_input, n_vocab)
-    model.load_weights('weights-improvement-01-0.0526-bigger.hdf5')
+    model.load_weights('weights-improvement-04-0.0347-bigger.hdf5')
     prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
     create_midi(prediction_output)
 

@@ -5,7 +5,7 @@ import pickle
 import numpy
 from music21 import converter, instrument, note, chord
 from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, LSTM, Activation, Input, Concatenate, Reshape
+from keras.layers import Dense, Dropout, LSTM, Activation, Input, Concatenate, Reshape, Flatten, Conv1D, GlobalMaxPooling1D
 from keras.utils import np_utils
 from keras.callbacks import ModelCheckpoint
 
@@ -86,12 +86,25 @@ def prepare_sequences(notes, n_vocab):
 
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
+    print("network_input shape",network_input.shape)
     inputs = Input(shape=(network_input.shape[1], network_input.shape[2]))
+    inputs_reshape = Reshape((network_input.shape[2],
+      network_input.shape[1]))(inputs)
+    conv_layer1 = Conv1D(64, kernel_size=3,
+        activation='relu')(inputs)
+    conv_layer2 = Conv1D(128, 3,
+        activation='relu')(conv_layer1)
+    pooling_layer = GlobalMaxPooling1D()(conv_layer2)
+    dropout_layer = Dropout(0.25)(pooling_layer)
+    """
+    model = Model(inputs = inputs, outputs = flatten_layer)
+    model.summary()
+
     lstm1 = LSTM(
         512,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
-    )(inputs)
+    )(flatten_layer)
 
     dropout1 = Dropout(0.3)(lstm1)
     lstm2 = LSTM(
@@ -103,8 +116,9 @@ def create_network(network_input, n_vocab):
     lstm3 = LSTM(
         512
     )(dropout2)
+    """
 
-    dense1 = Dense(256)(lstm3)
+    dense1 = Dense(256)(dropout_layer)
     dropout3 = Dropout(0.3)(dense1)
 
     dense2 = Dense(128,activation='sigmoid')(dropout3)
