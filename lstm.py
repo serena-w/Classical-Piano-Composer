@@ -91,7 +91,7 @@ def create_network(network_input, n_vocab):
     inputs_reshape = Reshape((network_input.shape[2],
       network_input.shape[1]))(inputs)
     conv_layer1 = Conv1D(64, kernel_size=3,
-        activation='relu')(inputs)
+        activation='relu')(inputs_reshape)
     conv_layer2 = Conv1D(128, 3,
         activation='relu')(conv_layer1)
     pooling_layer = GlobalMaxPooling1D()(conv_layer2)

@@ -23,7 +23,7 @@ def generate():
 
     network_input, _ = lstm.prepare_sequences(notes, n_vocab)
     model = lstm.create_network(network_input, n_vocab)
-    model.load_weights('weights-improvement-04-0.0347-bigger.hdf5')
+    model.load_weights('weights-improvement-199-0.0401-bigger.hdf5')
     prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
     create_midi(prediction_output)
 
@@ -42,9 +42,23 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
         prediction_input = numpy.reshape(pattern, (1, 128, 100))
         prediction = model.predict(prediction_input, verbose=0)
         notes = []
-        for note in range(0, len(prediction)):
-            if prediction[0][note] > 0.5:
+        """
+        for i in range(0,3):
+            top = numpy.argmax(prediction[0])
+            print(prediction[0][top])
+            prediction[0][top] = 0
+            notes.append(top)
+        """
+    
+        s = prediction[0]
+        s = s.argsort()[-3:]
+        for note in s:
+            if prediction[0][note] > 0.1:
                 notes.append(note)
+            
+        if len(notes) == 0:
+            notes.append(numpy.argmax(prediction[0]))
+            
         prediction_output.append(notes)
 
         pattern = numpy.append(pattern, prediction.reshape(-1,1), 1)
